@@ -75,7 +75,6 @@ public class Converter {
 
     private boolean hasUnbalancedMarkers(String text, String marker) {
         int openPos = -1;
-        int closePos = -1;
 
         for (int idx = 0; idx < text.length(); idx++) {
             if (text.startsWith(marker, idx)) {
@@ -89,21 +88,17 @@ public class Converter {
                     idx += marker.length() - 1;
                     continue;
                 }
-                if (openPos == -1 || closePos != -1) {
+                if (openPos == -1) {
                     openPos = idx;
-                    closePos = -1;
-                    idx += marker.length() - 1;
-                } else if (openPos != -1) {
-                    closePos = idx;
                     idx += marker.length() - 1;
                 }
             }
-            if (openPos != -1 && closePos == -1 && (text.charAt(idx) == '\n' || idx == text.length() - 1)) {
+            if (openPos != -1 && (text.charAt(idx) == '\n' || idx == text.length() - 1)) {
                 return true;
             }
         }
 
-        return openPos != -1 && closePos == -1;
+        return openPos != -1;
     }
 
 
