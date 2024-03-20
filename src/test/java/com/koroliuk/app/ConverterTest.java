@@ -12,7 +12,7 @@ class ConverterTest {
     void TestMarkdownToHtmlBoldText() throws Exception {
         String arrangeMarkdown = "**bold**";
         String expectedHtml = """
-                <p><b>bold</p>
+                <p><b>bold</b></p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
         assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
