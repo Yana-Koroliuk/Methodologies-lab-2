@@ -12,12 +12,12 @@ public class Converter {
         this.markdown = markdown;
     }
 
-    public String markdownToHtml() throws Exception {
+    public String markdownConverter(Format format) throws Exception {
         List<String> preBlocks = new ArrayList<>();
-        String html = markdown;
+        String converted = markdown;
 
         Pattern prePattern = Pattern.compile("(?m)(^\\n?|^)```(.*?)```(\\n?|$)", Pattern.DOTALL);
-        Matcher preMatcher = prePattern.matcher(html);
+        Matcher preMatcher = prePattern.matcher(converted);
         StringBuilder stringBuilder = new StringBuilder();
         int preIndex = 0;
         while (preMatcher.find()) {
@@ -28,40 +28,46 @@ public class Converter {
             preMatcher.appendReplacement(stringBuilder, Matcher.quoteReplacement(replacement));
         }
         preMatcher.appendTail(stringBuilder);
-        html = stringBuilder.toString();
-        String checkCopy = html;
+        converted = stringBuilder.toString();
+        String checkCopy = converted;
 
         String regexBold = "(?<![\\w`*\u0400-\u04FF])\\*\\*(\\S(?:.*?\\S)?)\\*\\*(?![\\w`*\u0400-\u04FF])";
         String regexItalic = "(?<![\\w`*\\u0400-\\u04FF])_(\\S(?:.*?\\S)?)_(?![\\w`*\\u0400-\\u04FF])";
         String regexMonospaced = "(?<![\\w`*\\u0400-\\u04FF])`(\\S(?:.*?\\S)?)`(?![\\w`*\\u0400-\\u04FF])";
 
-        List<String> boldBlocks = getMatchPatternList(regexBold, html);
-        List<String> italicBlocks = getMatchPatternList(regexItalic, html);
-        List<String> monospacedBlocks = getMatchPatternList(regexMonospaced, html);
+        List<String> boldBlocks = getMatchPatternList(regexBold, converted);
+        List<String> italicBlocks = getMatchPatternList(regexItalic, converted);
+        List<String> monospacedBlocks = getMatchPatternList(regexMonospaced, converted);
         checkNestedMarkers(regexItalic, regexMonospaced, boldBlocks);
         checkNestedMarkers(regexBold, regexItalic, monospacedBlocks);
         checkNestedMarkers(regexBold, regexMonospaced, italicBlocks);
 
-        html = html.replaceAll(regexBold, "<b>$1</b>");
-        checkCopy = checkCopy.replaceAll(regexBold, "boldBlock");
-        html = html.replaceAll(regexItalic, "<i>$1</i>");
-        checkCopy = checkCopy.replaceAll(regexItalic, "italicBlock");
-        html = html.replaceAll(regexMonospaced, "<tt>$1</tt>");
-        checkCopy = checkCopy.replaceAll(regexMonospaced, "monospacedBlock");
-
-        String[] paragraphs = html.split("\n{2,}");
-        StringBuilder htmlBuilder = new StringBuilder();
-        for (String paragraph : paragraphs) {
-            if (!paragraph.isEmpty()) {
-                htmlBuilder.append("<p>").append(paragraph).append("</p>\n");
+        if (format.equals(Format.HTML)) {
+            converted = converted.replaceAll(regexBold, "<b>$1</b>");
+            converted = converted.replaceAll(regexItalic, "<i>$1</i>");
+            converted = converted.replaceAll(regexMonospaced, "<tt>$1</tt>");
+            String[] paragraphs = converted.split("\n{2,}");
+            StringBuilder htmlBuilder = new StringBuilder();
+            for (String paragraph : paragraphs) {
+                if (!paragraph.isEmpty()) {
+                    htmlBuilder.append("<p>").append(paragraph).append("</p>\n");
+                }
             }
+        converted = htmlBuilder.toString();
+        } else {
+            converted = converted.replaceAll(regexBold, "\u001B[1m$1\u001B[22m");
+            converted = converted.replaceAll(regexItalic, "\u001B[3m$1\u001B[23m");
+            converted = converted.replaceAll(regexMonospaced, "\u001B[7m$1\u001B[27m");
         }
-        html = htmlBuilder.toString();
+        checkCopy = checkCopy.replaceAll(regexBold, "boldBlock");
+        checkCopy = checkCopy.replaceAll(regexItalic, "italicBlock");
+        checkCopy = checkCopy.replaceAll(regexMonospaced, "monospacedBlock");
         for (int i = 0; i < preBlocks.size(); i++) {
-            html = html.replace("PREBLOCK" + i, "<pre>" + preBlocks.get(i) + "</pre>");
+            converted = format.equals(Format.HTML) ? converted.replace("PREBLOCK" + i, "<pre>" + preBlocks.get(i) + "</pre>") :
+            converted.replace("PREBLOCK" + i, "\u001B[7m" + preBlocks.get(i) + "\u001B[27m");
         }
         checkForUnbalancedMarkers(checkCopy);
-        return html;
+        return converted;
     }
 
     private void checkForUnbalancedMarkers(String checkCopy) throws Exception {
