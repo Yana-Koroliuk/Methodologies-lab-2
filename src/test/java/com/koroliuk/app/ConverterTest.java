@@ -15,7 +15,7 @@ class ConverterTest {
                 <p><b>bold</b></p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @Test
@@ -25,7 +25,7 @@ class ConverterTest {
                 <p><i>italic</i></p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @Test
@@ -35,7 +35,7 @@ class ConverterTest {
                 <p><tt>monospaced</tt></p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @Test
@@ -52,7 +52,7 @@ class ConverterTest {
                 </p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @Test
@@ -68,14 +68,16 @@ class ConverterTest {
                 <p>And after a blank line this is paragraph 2.</p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"**`_not valid_`**", "_`not valid`_", "`**not valid**`", "_**not valid**_"})
     void testMarkdownToHtmlNestedMarkers(String input) {
         Converter converter = new Converter(input);
-        Exception exception = assertThrows(Exception.class, converter::markdownToHtml);
+        Exception exception = assertThrows(Exception.class, () -> {
+            converter.markdownConverter(Format.HTML);
+        });
         assertTrue(exception.getMessage().contains("ERROR: There is nested markers"));
     }
 
@@ -83,7 +85,9 @@ class ConverterTest {
     @ValueSource(strings = {"_start-but-not end", "_start-but-not\nend-in-the-same-line_", "**written **text"})
     void testMarkdownToHtmlUnbalancedMarkers(String input) {
         Converter converter = new Converter(input);
-        Exception exception = assertThrows(Exception.class, converter::markdownToHtml);
+        Exception exception = assertThrows(Exception.class, () -> {
+            converter.markdownConverter(Format.HTML);
+        });
         assertTrue(exception.getMessage().contains("ERROR: There is a start but no end among the markup elements"));
     }
 
@@ -95,7 +99,7 @@ class ConverterTest {
                 <p>** - відірвана від тексту розмітка</p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @Test
@@ -106,7 +110,7 @@ class ConverterTest {
                 <p><tt>_</tt> - відірвана від тексту розмітка</p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @Test
@@ -117,7 +121,7 @@ class ConverterTest {
                 <p>test_case_with_underscore</p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @Test
@@ -130,7 +134,7 @@ class ConverterTest {
                 written more text</p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 
     @Test
@@ -143,6 +147,6 @@ class ConverterTest {
                 underscore_</p>
                 """;
         Converter converter = new Converter(arrangeMarkdown);
-        assertEquals(expectedHtml, converter.markdownToHtml());
+        assertEquals(expectedHtml, converter.markdownConverter(Format.HTML));
     }
 }
